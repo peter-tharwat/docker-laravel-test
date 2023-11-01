@@ -5,7 +5,7 @@ services:
             context: ./
             dockerfile: Dockerfile
             args:
-                WWWGROUP: '${WWWGROUP}'
+                WWWGROUP: '1000' #'${WWWGROUP}'
         image: sail-8.2/app
         extra_hosts:
             - 'host.docker.internal:host-gateway'
