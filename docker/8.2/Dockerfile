@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 LABEL maintainer="Taylor Otwell"
 
-ARG WWWGROUP
+#ARG WWWGROUP
 ARG NODE_VERSION=20
 ARG POSTGRES_VERSION=15
 
@@ -55,8 +55,8 @@ RUN apt-get update \
 
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2
 
-RUN groupadd --force -g $WWWGROUP sail
-RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
+#RUN groupadd --force -g $WWWGROUP sail
+#RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
 
 
 COPY / /var/www/html
