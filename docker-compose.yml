@@ -17,7 +17,7 @@ services:
         depends_on:
             - database
         networks:
-            - default
+            - default-network
 
     database:
         container_name: database
@@ -32,13 +32,11 @@ services:
         volumes:
             - db-data:/var/lib/mysql
         networks:
-            - default
+            - default-network
 
 volumes:
     db-data: ~
 
 networks:
-  default:
+  default-network:
     driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1400
