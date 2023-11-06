@@ -39,5 +39,7 @@ RUN mkdir -p ./storage/framework/bootstrap/cache
 RUN usermod --uid 1000 www-data
 RUN groupmod --gid 1000  www-data
 
+EXPOSE 80
+
 # Run the entrypoint file.
 ENTRYPOINT [ "docker/entrypoint.sh" ]
