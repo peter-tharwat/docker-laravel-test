@@ -13,6 +13,8 @@ services:
           - ./docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini
         depends_on:
             - database
+        networks:
+            - default
     nginx:
         image: nginx:alpine
         container_name: nginx
@@ -29,7 +31,9 @@ services:
         depends_on:
             - database
             - example.com
- 
+        networks:
+            - default
+
     database:
         container_name: database
         image: mysql:latest
@@ -42,5 +46,13 @@ services:
             - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
         volumes:
             - db-data:/var/lib/mysql
+        networks:
+            - default
 volumes:
     db-data: ~
+
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1400
