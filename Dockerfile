@@ -1,75 +1,43 @@
-FROM ubuntu:22.04
+# Used for prod build.
+FROM php:8.2-fpm as php
 
-LABEL maintainer="Taylor Otwell"
+# Set environment variables
+ENV PHP_OPCACHE_ENABLE=1
+ENV PHP_OPCACHE_ENABLE_CLI=0
+ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
+ENV PHP_OPCACHE_REVALIDATE_FREQ=0
 
-ARG WWWGROUP=1000
-ARG WWWUSER=1000
-ENV WWWGROUP=${WWWGROUP}
-ENV WWWUSER=${WWWUSER}
+# Install dependencies.
+RUN apt-get update && apt-get install -y unzip libpq-dev libcurl4-gnutls-dev nginx libonig-dev
 
+# Install PHP extensions.
+RUN docker-php-ext-install mysqli pdo pdo_mysql bcmath curl opcache mbstring
 
-ARG NODE_VERSION=20
-ARG POSTGRES_VERSION=15
+# Copy composer executable.
+COPY --from=composer:2.3.5 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# Copy configuration files.
+COPY ./docker/php/php.ini /usr/local/etc/php/php.ini
+COPY ./docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV TZ=UTC
+# Set working directory to ...
+WORKDIR /usr/share/nginx/html/
 
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Copy files from current folder to container current folder (set in workdir).
+COPY --chown=www-data:www-data . .
 
-RUN apt-get update \
-    && mkdir -p /etc/apt/keyrings \
-    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python2 dnsutils librsvg2-bin fswatch \
-    && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
-    && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
-    && apt-get update \
-    && apt-get install -y php8.2-cli php8.2-dev \
-       php8.2-pgsql php8.2-sqlite3 php8.2-gd php8.2-imagick \
-       php8.2-curl \
-       php8.2-imap php8.2-mysql php8.2-mbstring \
-       php8.2-xml php8.2-zip php8.2-bcmath php8.2-soap \
-       php8.2-intl php8.2-readline \
-       php8.2-ldap \
-       php8.2-msgpack php8.2-igbinary php8.2-redis php8.2-swoole \
-       php8.2-memcached php8.2-pcov php8.2-xdebug \
-    && curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VERSION.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update \
-    && apt-get install -y nodejs \
-    && npm install -g npm \
-    && npm install -g pnpm \
-    && npm install -g bun \
-    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /etc/apt/keyrings/yarn.gpg >/dev/null \
-    && echo "deb [signed-by=/etc/apt/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
-    && curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/keyrings/pgdg.gpg >/dev/null \
-    && echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
-    && apt-get update \
-    && apt-get install -y yarn \
-    && apt-get install -y mysql-client \
-    && apt-get install -y postgresql-client-$POSTGRES_VERSION \
-    && apt-get -y autoremove \
-    && apt-get clean \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Create laravel caching folders.
+RUN mkdir -p ./storage/framework
+RUN mkdir -p ./storage/framework/{cache, testing, sessions, views}
+RUN mkdir -p ./storage/framework/bootstrap
+RUN mkdir -p ./storage/framework/bootstrap/cache
 
 
 
+# Adjust user permission & group.
+RUN usermod --uid 1000 www-data
+RUN groupmod --gid 1000  www-data
 
-
-RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.2
-
-#RUN groupadd --force -g $WWWGROUP sail
-#RUN useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail
-
-
-COPY . /var/www/html
-COPY ./docker/8.2/start-container /usr/local/bin/start-container
-COPY ./docker/8.2/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY ./docker/8.2/php.ini /etc/php/8.2/cli/conf.d/99-sail.ini
-RUN chmod +x /usr/local/bin/start-container
-
-EXPOSE 8000
-
-ENTRYPOINT ["start-container"]
+# Run the entrypoint file.
+ENTRYPOINT [ "docker/entrypoint.sh" ]
