@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name 127.0.0.1;
+    server_name 167.71.79.129;
     index index.php index.html;
     error_log  /var/log/nginx/error.log;
     access_log /var/log/nginx/access.log;
