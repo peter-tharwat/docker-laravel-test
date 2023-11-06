@@ -6,8 +6,8 @@ services:
           dockerfile: Dockerfile.local
         container_name: example.com
         #restart: unless-stopped
-        ports:
-          - :9000
+        # ports:
+        #   - :9000
         tty: true
         working_dir: /usr/share/nginx/html/
         volumes:
