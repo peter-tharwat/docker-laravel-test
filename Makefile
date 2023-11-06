@@ -9,16 +9,16 @@ help: ## Print help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 ps: ## Show containers.
-	@docker compose ps
+	@docker-compose ps
 
 build: ## Build all containers for DEV
 	@docker build . -t ${CONTAINER_PHP} -f ./Dockerfile.local
 build-nocache: ## Build all containers for DEV
 	@docker build --no-cache . -f ./Dockerfile.local
 start: ## Start all containers for DEV
-	@docker compose -f docker-compose.local.yml up --force-recreate
+	@docker-compose -f docker-compose.local.yml up --force-recreate
 stop: ## Stop all containers for DEV
-	@docker compose -f docker-compose.local.yml stop
+	@docker-compose -f docker-compose.local.yml stop
 restart: stop start ## Restart all containers
 destroy: stop ## Destroy all containers
 
@@ -28,9 +28,9 @@ build-prod: ## Build all containers for PROD
 build-prod-nocache: ## Build all containers for PROD
 	@docker build --no-cache .
 start-prod: ## Start all containers
-	@docker compose up --force-recreate -d
+	@docker-compose up --force-recreate -d
 stop-prod: ## Stop all containers
-	@docker compose stop
+	@docker-compose stop
 restart-prod: stop-prod start-prod ## Restart all containers
 destroy-prod: stop-prod ## Destroy all containers
 
