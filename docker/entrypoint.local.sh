@@ -11,11 +11,11 @@ else
     echo "env file exists."
 fi
 
-sleep 3
+sleep 10
 
 # run artisan scripts
 pushd /usr/share/nginx/html/
-  php artisan migrate:fresh
+  php artisan migrate
 popd
 
 
